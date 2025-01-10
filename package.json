@@ -46,7 +46,7 @@
     "reselect": "^4.0.0",
     "riot": "<4",
     "riot-route": "^3.1.4",
-    "uss": "^0.0.17"
+    "uss": "^0.0.18"
   },
   "devDependencies": {
     "@babel/core": "^7.4.5",
