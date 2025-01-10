@@ -1,4 +1,16 @@
 {
+  "scripts": {
+    "build:coffee": "npx coffee src/tiles.coffee",
+    "install": "yarn",
+    "version:patch": "yarn version --patch --cwd src",
+    "production": "NODE_ENV=production npx webpack --config src/webpack.config.js",
+    "dev": "NODE_ENV=development npx webpack-dev-server --mode development --open --config src/webpack.config.js --port 5000",
+    "test": "npx jest",
+    "docker:build": "docker build . -f devops/Dockerfile -t mahjong.horneds.com",
+    "docker:run": "docker run -it --rm -p 8000:80 mahjong.horneds.com",
+    "docker:test": "npm run test",
+    "build:docker": "docker build --pull=true -t mahjong.horneds.com:latest -f devops/Dockerfile . && docker run -i --rm mahjong.horneds.com:latest npx jest && docker tag mahjong.horneds.com:latest docker.horneds.com/mahjong.horneds.com:latest && docker push docker.horneds.com/mahjong.horneds.com:latest && docker system prune -f --filter \"until=8h\""
+  },
   "jest": {
     "moduleFileExtensions": [
       "js",
