@@ -1,20 +1,32 @@
-@import "styles/variables.sass";
+@import "styles/variables.sass"
 
 @keyframes scaleIn
-  from { opacity: 0; transform: scale(.75) }
-  to { opacity: 1; transform: scale(1) }
+  from
+    opacity: 0
+    transform: scale(.75)
+  to
+    opacity: 1
+    transform: scale(1)
 
 @keyframes scaleOut
-  from { opacity: 1; transform: scale(1) }
-  to { opacity: 0; transform: scale(1.25) }
+  from
+    opacity: 1
+    transform: scale(1)
+  to
+    opacity: 0
+    transform: scale(1.25)
 
 @keyframes fadeIn
-  from { opacity: 0 }
-  to { opacity: 1 }
+  from
+    opacity: 0
+  to
+    opacity: 1
 
 @keyframes fadeOut
-  from { opacity: 1 }
-  to { opacity: 0 }
+  from
+    opacity: 1
+  to
+    opacity: 0
 
 // Kill the scroll on the body
 .u-modal-open
@@ -84,7 +96,7 @@
   right: 0
   bottom: 0
   opacity: 0
-  background-color: transparentize($black, .4);
+  background-color: transparentize($black, .4)
 
   &--visible
     opacity: 1
