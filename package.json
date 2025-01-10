@@ -1,7 +1,6 @@
 {
   "scripts": {
-    "build:coffee": "npx coffee src/tiles.coffee",
-    "install": "yarn",
+    "build:coffee": "npx coffee src/mahjong/tiles.coffee",
     "version:patch": "yarn version --patch --cwd src",
     "production": "NODE_ENV=production npx webpack --config src/webpack.config.js",
     "dev": "NODE_ENV=development npx webpack-dev-server --mode development --open --config src/webpack.config.js --port 5000",
