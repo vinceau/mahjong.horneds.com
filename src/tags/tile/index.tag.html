@@ -1,6 +1,6 @@
 <tile>
     <div class="c-tile {'c-tile--open': opts.open, 'c-tile--back': opts.tile.isClosed}" aria-label={ !opts.tile.isClosed && opts.label } role="tooltip">
-        <img class="c-tile__img {'c-tile__img--back': opts.tile.isClosed}" src={ !opts.tile.isClosed && tiles.white[opts.tile.tile] } />
+        <img if={ !opts.tile.isClosed } class="c-tile__img" src={ tiles.white[opts.tile.tile] } />
     </div>
     <script type="text/coffeescript">
         require './styles.sass'
