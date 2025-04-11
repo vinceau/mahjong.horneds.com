@@ -1,7 +1,15 @@
 Riichi Mahjong Scores Trainer
 =============================
 
-Source files for https://mahjong.horneds.com
+Based on the source files for https://mahjong.horneds.com
+
+New changes reployed to: http://vince.id.au/mahjong.horneds.com/
+
+
+## Changes
+
+* Support for mobile
+* Fix for false ryanpeikou
 
 
 ### Build Instructions
