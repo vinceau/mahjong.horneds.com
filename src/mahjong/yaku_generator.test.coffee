@@ -25,7 +25,8 @@ test 'generates valid game state shape', ->
     expect(game.prevalentWind).toBeTruthy()
     expect(game.hand.sets.length).toBe 4
     expect(game.hand.pair).toBeTruthy()
-    expect(game.hand.tiles().length).toBe 14
+    kanCount = (set for set in game.hand.sets when set.isKan).length
+    expect(game.hand.tiles().length).toBe 14 + kanCount
 
 test 'constructForYaku produces valid hand for every yaku', ->
     for yakuName in ALL_YAKU
