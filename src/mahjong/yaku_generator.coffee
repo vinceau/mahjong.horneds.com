@@ -349,6 +349,9 @@ generateGameState = ->
     prevalentWind = sample([SUITS.w[0], SUITS.w[1]])
 
     result = analyze({ wall, hand, seatWind, prevalentWind })
+    detected = (y.name for y in result.yaku)
+    unless target in detected
+        throw new Error "Sanity check: target yaku '#{target}' not found in analysis (found: #{detected.join(', ')})"
     recordYaku(result.yaku)
 
     { wall, hand, seatWind, prevalentWind }
