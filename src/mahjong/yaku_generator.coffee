@@ -106,6 +106,7 @@ constructForYaku = (target) ->
                 pair(pool, suit, 5)
             )
             hand.isOpened = true
+            hand.sets[0]?.isOpened = true
             hand
 
         when 'chinitsu'
@@ -125,6 +126,7 @@ constructForYaku = (target) ->
                 pair(pool, pairSuit, 1)
             )
             hand.isOpened = true
+            hand.sets[0]?.isOpened = true
             hand
 
         when 'tsuu iisou'
@@ -135,6 +137,7 @@ constructForYaku = (target) ->
                 honorPair(pool, honors[4])
             )
             hand.isOpened = true
+            hand.sets[0]?.isOpened = true
             hand
 
         when 'chinrouto'
@@ -145,6 +148,7 @@ constructForYaku = (target) ->
                 pair(pool, suits[1], 1)
             )
             hand.isOpened = true
+            hand.sets[0]?.isOpened = true
             hand
 
         when 'ryuu iisou'
@@ -159,6 +163,7 @@ constructForYaku = (target) ->
                 pair(pool, 's', 7)
             )
             hand.isOpened = true
+            hand.sets[0]?.isOpened = true
             hand
 
         when 'pinfu'
@@ -193,6 +198,7 @@ constructForYaku = (target) ->
                 pair(pool, 's', 9)
             )
             hand.isOpened = true
+            hand.sets[0]?.isOpened = true
             hand
 
         when 'sankantsu'
@@ -284,6 +290,7 @@ constructForYaku = (target) ->
                 pair(pool, suit, num)
             )
             hand.isOpened = true
+            hand.sets[0]?.isOpened = true
             hand
 
         when 'chanta'
@@ -300,6 +307,7 @@ constructForYaku = (target) ->
                 pairTile
             )
             hand.isOpened = true
+            hand.sets[0]?.isOpened = true
             hand
 
         when 'junchan'
@@ -318,6 +326,7 @@ constructForYaku = (target) ->
                 pairTile
             )
             hand.isOpened = true
+            hand.sets[0]?.isOpened = true
             hand
 
         when 'yakuhai'
