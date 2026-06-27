@@ -42,6 +42,14 @@ honorPung = (name) ->
 honorPair = (name) ->
     TileSet.create "#{name}#{name}"
 
+assertValidTileCount = (hand) ->
+    counts = {}
+    for t in hand.tiles()
+        counts[t.tile] = (counts[t.tile] or 0) + 1
+    for tile, count of counts
+        if count > 4
+            throw new Error "Invalid hand: #{count} copies of #{tile} (max 4)"
+
 selectTarget = ->
     if unseenYakuman.size > 0 and random(100) <= 10
         return sample([...unseenYakuman])
@@ -59,7 +67,7 @@ recordYaku = (yakuList) ->
         unseenNormal = new Set(NORMAL_YAKU)
 
 constructForYaku = (target) ->
-    switch target
+    hand = switch target
         when 'tanyao'
             suit = sample ['m', 's', 'p']
             new Hand(
@@ -81,16 +89,17 @@ constructForYaku = (target) ->
             suit = sample ['m', 's', 'p']
             new Hand(
                 chow(suit, 1), chow(suit, 4), chow(suit, 7), pung(suit, 5),
-                pair(suit, 5)
+                pair(suit, 1)
             )
 
         when 'honroutou'
             honors = sampleSize ['wE', 'wS', 'wW', 'wN', 'dR', 'dW', 'dG'], 3
             suit = sample ['m', 's', 'p']
+            pairSuit = sample (s for s in ['m', 's', 'p'] when s != suit)
             hand = new Hand(
                 honorPung(honors[0]), honorPung(honors[1]),
                 pung(suit, 1), pung(suit, 9),
-                pair(suit, 1)
+                pair(pairSuit, 1)
             )
             hand.isOpened = true
             hand
@@ -108,15 +117,16 @@ constructForYaku = (target) ->
         when 'chinrouto'
             suits = sampleSize ['m', 's', 'p'], 3
             hand = new Hand(
-                pung(suits[0], 1), pung(suits[1], 9), pung(suits[2], 1), pung('m', 9),
-                pair('s', 9)
+                pung(suits[0], 1), pung(suits[1], 9), pung(suits[2], 1),
+                pung(suits[0], 9),
+                pair(suits[1], 1)
             )
             hand.isOpened = true
             hand
 
         when 'ryuu iisou'
             new Hand(
-                chow('s', 2), pung('s', 6), pung('s', 8), honorPung('dG'),
+                chow('s', 2), pung('s', 6), pung('s', 8), pung('s', 4),
                 honorPair('dG')
             )
 
@@ -141,7 +151,7 @@ constructForYaku = (target) ->
             hand = new Hand(
                 pung('m', 5), pung('s', 3), pung('p', 7),
                 chow('m', 1),
-                pair('m', 5)
+                pair('m', 9)
             )
             hand.wait = hand.sets[3].tiles[1]
             hand
@@ -187,11 +197,12 @@ constructForYaku = (target) ->
 
         when 'sanshoku dokou'
             num = random(1, 9)
+            pairVal = if num != 5 then 5 else 7
             chowSuit = sample ['m', 's', 'p']
             new Hand(
                 pung('m', num), pung('s', num), pung('p', num),
                 chow(chowSuit, 2),
-                pair('m', 5)
+                pair('s', pairVal)
             )
 
         when 'iipeikou'
@@ -310,6 +321,8 @@ constructForYaku = (target) ->
                 chow(suit, 1), chow(suit, 2), chow(suit, 4), chow(suit, 5),
                 pair(suit, 7)
             )
+    assertValidTileCount(hand)
+    hand
 
 tilePool = ->
     (new Tile(t) for t in shuffle TILES)
