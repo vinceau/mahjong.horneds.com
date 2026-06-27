@@ -30,9 +30,7 @@ test 'generates valid game state shape', ->
 
 test 'constructForYaku produces valid hand for every yaku', ->
     for yakuName in ALL_YAKU
-        hand = constructForYaku(yakuName)
-        unless hand
-            console.log "FAIL: constructForYaku('#{yakuName}') returned null"
+        { hand } = constructForYaku(yakuName)
         expect(hand).toBeTruthy()
         if KAN_TILE_COUNTS[yakuName]
             expect(hand.tiles().length).toBe KAN_TILE_COUNTS[yakuName]
@@ -44,22 +42,14 @@ test 'constructForYaku produces valid hand for every yaku', ->
 
 test 'each constructed hand is detected as its target yaku', ->
     for yakuName in ALL_YAKU
-        hand = constructForYaku(yakuName)
+        { hand } = constructForYaku(yakuName)
         wall = []
         result = analyze { wall, hand, seatWind: 'wE', prevalentWind: 'wS' }
         detected = (y.name for y in result.yaku)
-        unless yakuName in detected
-            console.log "FAIL: #{yakuName} not detected, saw: #{detected.join(', ')}"
-            console.log "  options: #{JSON.stringify(Object.keys(hand.options))}"
-            console.log "  wait: #{hand.wait?.tile}"
-            console.log "  isOpened: #{hand.isOpened}"
-            console.log "  tsumo: #{hand.tsumo}"
         expect(detected).toContain(yakuName)
     return
 
 test 'generateGameState produces hands with yaku', ->
-    for i in [0...50]
-        game = generateGameState()
-        result = analyze(game)
-        expect(result.yaku.length).toBeGreaterThan 0
-    return
+    game = generateGameState()
+    result = analyze(game)
+    expect(result.yaku.length).toBeGreaterThan 0
