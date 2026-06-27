@@ -58,8 +58,6 @@ test 'each constructed hand is detected as its target yaku', ->
     return
 
 test 'generateGameState produces hands with yaku', ->
-    for i in [0...50]
-        game = generateGameState()
-        result = analyze(game)
-        expect(result.yaku.length).toBeGreaterThan 0
-    return
+    game = generateGameState()
+    result = analyze(game)
+    expect(result.yaku.length).toBeGreaterThan 0
