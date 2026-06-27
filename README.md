@@ -11,6 +11,8 @@ New changes reployed to: http://vince.id.au/mahjong.horneds.com/
 * Improved support for mobile
 * Improved random hand generation
   * All the yaku will now be generated so you can test your yaku knowledge as well as scoring
+* Add open hands support
+  * You can now test your knowledge on yakus that change value based on being open/closed
 
 
 ### Build Instructions
