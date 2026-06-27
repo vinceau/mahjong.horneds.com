@@ -7,6 +7,18 @@ random = require 'lodash/random'
 { TILES, SUITS } = require './resources'
 analyze = require './analyze'
 
+class Pool
+    constructor: ->
+        @counts = {}
+        for tile in TILES
+            @counts[tile] = (@counts[tile] or 0) + 1
+
+    take: (tile) ->
+        if @counts[tile] <= 0
+            throw new Error "No #{tile} remaining (max 4)"
+        @counts[tile]--
+        new Tile(tile)
+
 NORMAL_YAKU = [
     'chinitsu', 'ryanpeikou'
     'sanshoku dokou', 'sanankou', 'sankantsu', 'toitoi'
@@ -24,31 +36,41 @@ YAKUMAN = [
 unseenNormal = new Set(NORMAL_YAKU)
 unseenYakuman = new Set(YAKUMAN)
 
-chow = (suit, start) ->
-    TileSet.create "#{suit}#{start}#{suit}#{start + 1}#{suit}#{start + 2}"
+chow = (pool, suit, start) ->
+    tiles = (pool.take("#{suit}#{start + i}") for i in [0..2])
+    ts = new TileSet(tiles...)
+    ts.isValid()
+    ts
 
-pung = (suit, val) ->
-    TileSet.create "#{suit}#{val}#{suit}#{val}#{suit}#{val}"
+pung = (pool, suit, val) ->
+    tiles = (pool.take("#{suit}#{val}") for _ in [0..2])
+    ts = new TileSet(tiles...)
+    ts.isValid()
+    ts
 
-kan = (suit, val) ->
-    TileSet.create "#{suit}#{val}#{suit}#{val}#{suit}#{val}#{suit}#{val}"
+kan = (pool, suit, val) ->
+    tiles = (pool.take("#{suit}#{val}") for _ in [0..3])
+    ts = new TileSet(tiles...)
+    ts.isValid()
+    ts
 
-pair = (suit, val) ->
-    TileSet.create "#{suit}#{val}#{suit}#{val}"
+pair = (pool, suit, val) ->
+    tiles = (pool.take("#{suit}#{val}") for _ in [0..1])
+    ts = new TileSet(tiles...)
+    ts.isValid()
+    ts
 
-honorPung = (name) ->
-    TileSet.create "#{name}#{name}#{name}"
+honorPung = (pool, name) ->
+    tiles = (pool.take(name) for _ in [0..2])
+    ts = new TileSet(tiles...)
+    ts.isValid()
+    ts
 
-honorPair = (name) ->
-    TileSet.create "#{name}#{name}"
-
-assertValidTileCount = (hand) ->
-    counts = {}
-    for t in hand.tiles()
-        counts[t.tile] = (counts[t.tile] or 0) + 1
-    for tile, count of counts
-        if count > 4
-            throw new Error "Invalid hand: #{count} copies of #{tile} (max 4)"
+honorPair = (pool, name) ->
+    tiles = (pool.take(name) for _ in [0..1])
+    ts = new TileSet(tiles...)
+    ts.isValid()
+    ts
 
 selectTarget = ->
     if unseenYakuman.size > 0 and random(100) <= 10
@@ -67,20 +89,21 @@ recordYaku = (yakuList) ->
         unseenNormal = new Set(NORMAL_YAKU)
 
 constructForYaku = (target) ->
+    pool = new Pool()
     hand = switch target
         when 'tanyao'
             suit = sample ['m', 's', 'p']
             new Hand(
-                chow(suit, 2), chow(suit, 3), chow(suit, 5), chow(suit, 6),
-                pair(suit, 8)
+                chow(pool, suit, 2), chow(pool, suit, 3), chow(pool, suit, 5), chow(pool, suit, 6),
+                pair(pool, suit, 8)
             )
 
         when 'honitsu'
             suit = sample ['m', 's', 'p']
             honor = sample ['wE', 'wS', 'wW', 'wN', 'dR', 'dW', 'dG']
             hand = new Hand(
-                chow(suit, 1), chow(suit, 4), chow(suit, 7), honorPung(honor),
-                pair(suit, 5)
+                chow(pool, suit, 1), chow(pool, suit, 4), chow(pool, suit, 7), honorPung(pool, honor),
+                pair(pool, suit, 5)
             )
             hand.isOpened = true
             hand
@@ -88,8 +111,8 @@ constructForYaku = (target) ->
         when 'chinitsu'
             suit = sample ['m', 's', 'p']
             new Hand(
-                chow(suit, 1), chow(suit, 4), chow(suit, 7), pung(suit, 5),
-                pair(suit, 1)
+                chow(pool, suit, 1), chow(pool, suit, 4), chow(pool, suit, 7), pung(pool, suit, 5),
+                pair(pool, suit, 1)
             )
 
         when 'honroutou'
@@ -97,9 +120,9 @@ constructForYaku = (target) ->
             suit = sample ['m', 's', 'p']
             pairSuit = sample (s for s in ['m', 's', 'p'] when s != suit)
             hand = new Hand(
-                honorPung(honors[0]), honorPung(honors[1]),
-                pung(suit, 1), pung(suit, 9),
-                pair(pairSuit, 1)
+                honorPung(pool, honors[0]), honorPung(pool, honors[1]),
+                pung(pool, suit, 1), pung(pool, suit, 9),
+                pair(pool, pairSuit, 1)
             )
             hand.isOpened = true
             hand
@@ -107,9 +130,9 @@ constructForYaku = (target) ->
         when 'tsuu iisou'
             honors = sampleSize ['wE', 'wS', 'wW', 'wN', 'dR', 'dW', 'dG'], 5
             hand = new Hand(
-                honorPung(honors[0]), honorPung(honors[1]),
-                honorPung(honors[2]), honorPung(honors[3]),
-                honorPair(honors[4])
+                honorPung(pool, honors[0]), honorPung(pool, honors[1]),
+                honorPung(pool, honors[2]), honorPung(pool, honors[3]),
+                honorPair(pool, honors[4])
             )
             hand.isOpened = true
             hand
@@ -117,23 +140,23 @@ constructForYaku = (target) ->
         when 'chinrouto'
             suits = sampleSize ['m', 's', 'p'], 3
             hand = new Hand(
-                pung(suits[0], 1), pung(suits[1], 9), pung(suits[2], 1),
-                pung(suits[0], 9),
-                pair(suits[1], 1)
+                pung(pool, suits[0], 1), pung(pool, suits[1], 9), pung(pool, suits[2], 1),
+                pung(pool, suits[0], 9),
+                pair(pool, suits[1], 1)
             )
             hand.isOpened = true
             hand
 
         when 'ryuu iisou'
             new Hand(
-                chow('s', 2), pung('s', 6), pung('s', 8), pung('s', 4),
-                honorPair('dG')
+                chow(pool, 's', 2), pung(pool, 's', 6), pung(pool, 's', 8), pung(pool, 's', 4),
+                honorPair(pool, 'dG')
             )
 
         when 'toitoi'
             hand = new Hand(
-                pung('m', 1), pung('s', 5), pung('p', 9), pung('m', 3),
-                pair('s', 7)
+                pung(pool, 'm', 1), pung(pool, 's', 5), pung(pool, 'p', 9), pung(pool, 'm', 3),
+                pair(pool, 's', 7)
             )
             hand.isOpened = true
             hand
@@ -141,58 +164,58 @@ constructForYaku = (target) ->
         when 'pinfu'
             suit = sample ['m', 's', 'p']
             hand = new Hand(
-                chow(suit, 1), chow(suit, 2), chow(suit, 6), chow(suit, 7),
-                pair(suit, 5)
+                chow(pool, suit, 1), chow(pool, suit, 2), chow(pool, suit, 6), chow(pool, suit, 7),
+                pair(pool, suit, 5)
             )
             hand.wait = hand.sets[0].tiles[1]
             hand
 
         when 'sanankou'
             hand = new Hand(
-                pung('m', 5), pung('s', 3), pung('p', 7),
-                chow('m', 1),
-                pair('m', 9)
+                pung(pool, 'm', 5), pung(pool, 's', 3), pung(pool, 'p', 7),
+                chow(pool, 'm', 1),
+                pair(pool, 'm', 9)
             )
             hand.wait = hand.sets[3].tiles[1]
             hand
 
         when 'suu ankou'
             hand = new Hand(
-                pung('m', 1), pung('s', 3), pung('p', 5), pung('m', 7),
-                pair('s', 9)
+                pung(pool, 'm', 1), pung(pool, 's', 3), pung(pool, 'p', 5), pung(pool, 'm', 7),
+                pair(pool, 's', 9)
             )
             hand.wait = hand.pair.tiles[0]
             hand
 
         when 'suu kan tsu'
             hand = new Hand(
-                kan('m', 1), kan('s', 3), kan('p', 5), kan('m', 7),
-                pair('s', 9)
+                kan(pool, 'm', 1), kan(pool, 's', 3), kan(pool, 'p', 5), kan(pool, 'm', 7),
+                pair(pool, 's', 9)
             )
             hand.isOpened = true
             hand
 
         when 'sankantsu'
             new Hand(
-                kan('m', 1), kan('s', 3), kan('p', 5),
-                chow('m', 2),
-                pair('m', 8)
+                kan(pool, 'm', 1), kan(pool, 's', 3), kan(pool, 'p', 5),
+                chow(pool, 'm', 2),
+                pair(pool, 'm', 8)
             )
 
         when 'itsu'
             suit = sample ['m', 's', 'p']
             new Hand(
-                chow(suit, 1), chow(suit, 4), chow(suit, 7),
-                chow(suit, 2),
-                pair(suit, 5)
+                chow(pool, suit, 1), chow(pool, suit, 4), chow(pool, suit, 7),
+                chow(pool, suit, 2),
+                pair(pool, suit, 5)
             )
 
         when 'sanshoku'
             num = random(1, 7)
             new Hand(
-                chow('m', num), chow('s', num), chow('p', num),
-                chow('m', 2),
-                pair('m', 5)
+                chow(pool, 'm', num), chow(pool, 's', num), chow(pool, 'p', num),
+                chow(pool, 'm', 2),
+                pair(pool, 'm', 5)
             )
 
         when 'sanshoku dokou'
@@ -200,17 +223,17 @@ constructForYaku = (target) ->
             pairVal = if num != 5 then 5 else 7
             chowSuit = sample ['m', 's', 'p']
             new Hand(
-                pung('m', num), pung('s', num), pung('p', num),
-                chow(chowSuit, 2),
-                pair('s', pairVal)
+                pung(pool, 'm', num), pung(pool, 's', num), pung(pool, 'p', num),
+                chow(pool, chowSuit, 2),
+                pair(pool, 's', pairVal)
             )
 
         when 'iipeikou'
             suit = sample ['m', 's', 'p']
             new Hand(
-                chow(suit, 2), chow(suit, 2),
-                chow(suit, 6), chow(suit, 7),
-                pair(suit, 5)
+                chow(pool, suit, 2), chow(pool, suit, 2),
+                chow(pool, suit, 6), chow(pool, suit, 7),
+                pair(pool, suit, 5)
             )
 
         when 'ryanpeikou'
@@ -218,27 +241,27 @@ constructForYaku = (target) ->
             num1 = random(1, 4)
             num2 = random(num1 + 3, 7)
             new Hand(
-                chow(suit, num1), chow(suit, num1),
-                chow(suit, num2), chow(suit, num2),
-                pair(suit, 8)
+                chow(pool, suit, num1), chow(pool, suit, num1),
+                chow(pool, suit, num2), chow(pool, suit, num2),
+                pair(pool, suit, 8)
             )
 
         when 'shou sangen'
             dragons = sampleSize ['dR', 'dW', 'dG'], 3
             suit = sample ['m', 's', 'p']
             new Hand(
-                honorPung(dragons[0]), honorPung(dragons[1]),
-                chow(suit, 2), chow(suit, 5),
-                honorPair(dragons[2])
+                honorPung(pool, dragons[0]), honorPung(pool, dragons[1]),
+                chow(pool, suit, 2), chow(pool, suit, 5),
+                honorPair(pool, dragons[2])
             )
 
         when 'dai sangen'
             suit = sample ['m', 's', 'p']
             num = random(1, 7)
             new Hand(
-                honorPung('dR'), honorPung('dW'), honorPung('dG'),
-                chow(suit, num),
-                pair(suit, 1)
+                honorPung(pool, 'dR'), honorPung(pool, 'dW'), honorPung(pool, 'dG'),
+                chow(pool, suit, num),
+                pair(pool, suit, 1)
             )
 
         when 'shou suushii'
@@ -246,9 +269,9 @@ constructForYaku = (target) ->
             suit = sample ['m', 's', 'p']
             num = random(1, 7)
             new Hand(
-                honorPung(winds[0]), honorPung(winds[1]), honorPung(winds[2]),
-                chow(suit, num),
-                honorPair(winds[3])
+                honorPung(pool, winds[0]), honorPung(pool, winds[1]), honorPung(pool, winds[2]),
+                chow(pool, suit, num),
+                honorPair(pool, winds[3])
             )
 
         when 'dai suushii'
@@ -256,9 +279,9 @@ constructForYaku = (target) ->
             suit = sample ['m', 's', 'p']
             num = random(1, 9)
             hand = new Hand(
-                honorPung(winds[0]), honorPung(winds[1]),
-                honorPung(winds[2]), honorPung(winds[3]),
-                pair(suit, num)
+                honorPung(pool, winds[0]), honorPung(pool, winds[1]),
+                honorPung(pool, winds[2]), honorPung(pool, winds[3]),
+                pair(pool, suit, num)
             )
             hand.isOpened = true
             hand
@@ -267,13 +290,13 @@ constructForYaku = (target) ->
             suit = sample ['m', 's', 'p']
             direction = sample ['low', 'high']
             [chow1, chow2, pairTile] = if direction == 'low'
-                [chow(suit, 1), chow(suit, 7), pair(suit, 9)]
+                [chow(pool, suit, 1), chow(pool, suit, 7), pair(pool, suit, 9)]
             else
-                [chow(suit, 7), chow(suit, 1), pair(suit, 1)]
+                [chow(pool, suit, 7), chow(pool, suit, 1), pair(pool, suit, 1)]
             honors = sampleSize ['wE', 'wS', 'wW', 'wN', 'dR', 'dW', 'dG'], 2
             hand = new Hand(
                 chow1, chow2,
-                honorPung(honors[0]), honorPung(honors[1]),
+                honorPung(pool, honors[0]), honorPung(pool, honors[1]),
                 pairTile
             )
             hand.isOpened = true
@@ -286,12 +309,12 @@ constructForYaku = (target) ->
             otherSuit1 = sample otherSuits
             otherSuit2 = (s for s in otherSuits when s != otherSuit1)[0]
             [chow1, chow2, pairTile] = if direction == 'low'
-                [chow(suit, 1), chow(suit, 7), pair(suit, 9)]
+                [chow(pool, suit, 1), chow(pool, suit, 7), pair(pool, suit, 9)]
             else
-                [chow(suit, 7), chow(suit, 1), pair(suit, 1)]
+                [chow(pool, suit, 7), chow(pool, suit, 1), pair(pool, suit, 1)]
             hand = new Hand(
                 chow1, chow2,
-                pung(otherSuit1, 1), pung(otherSuit2, 9),
+                pung(pool, otherSuit1, 1), pung(pool, otherSuit2, 9),
                 pairTile
             )
             hand.isOpened = true
@@ -301,47 +324,34 @@ constructForYaku = (target) ->
             honor = sample ['dR', 'dW', 'dG']
             suit = sample ['m', 's', 'p']
             new Hand(
-                honorPung(honor),
-                chow(suit, 2), chow(suit, 5), chow(suit, 6),
-                pair(suit, 8)
+                honorPung(pool, honor),
+                chow(pool, suit, 2), chow(pool, suit, 5), chow(pool, suit, 6),
+                pair(pool, suit, 8)
             )
 
         when 'chuuren pooto'
             suit = sample ['m', 's', 'p']
-            set1 = TileSet.create("#{suit}1#{suit}1#{suit}1")
-            set2 = TileSet.create("#{suit}2#{suit}3#{suit}4")
-            p = TileSet.create("#{suit}5#{suit}5")
-            set3 = TileSet.create("#{suit}6#{suit}7#{suit}8")
-            set4 = TileSet.create("#{suit}9#{suit}9#{suit}9")
-            new Hand(set1, set2, p, set3, set4)
+            new Hand(
+                pung(pool, suit, 1),
+                chow(pool, suit, 2),
+                pair(pool, suit, 5),
+                chow(pool, suit, 6),
+                pung(pool, suit, 9)
+            )
 
         else
             suit = sample ['m', 's', 'p']
             new Hand(
-                chow(suit, 1), chow(suit, 2), chow(suit, 4), chow(suit, 5),
-                pair(suit, 7)
+                chow(pool, suit, 1), chow(pool, suit, 2), chow(pool, suit, 4), chow(pool, suit, 5),
+                pair(pool, suit, 7)
             )
-    assertValidTileCount(hand)
-    hand
+    { hand, pool }
 
-tilePool = ->
-    (new Tile(t) for t in shuffle TILES)
-
-buildWall = (hand) ->
-    allTiles = tilePool()
-    handTiles = hand.tiles()
-
-    handCounts = {}
-    for t in handTiles
-        handCounts[t.tile] = (handCounts[t.tile] or 0) + 1
-
+buildWall = (pool, hand) ->
     remaining = []
-    for tileObj in allTiles
-        if handCounts[tileObj.tile] and handCounts[tileObj.tile] > 0
-            handCounts[tileObj.tile]--
-        else
-            remaining.push(tileObj)
-
+    for tile, count of pool.counts
+        remaining.push(new Tile(tile)) for _ in [0...count]
+    remaining = shuffle(remaining)
     wall = remaining.splice(0, 14)
     tile.isClosed = true for tile in wall
 
@@ -350,14 +360,14 @@ buildWall = (hand) ->
     for idx in [0...indicators]
         wall[2 + idx]?.isClosed = wall[9 + idx]?.isClosed = false
 
-    return wall
+    wall
 
 generateGameState = ->
     target = selectTarget()
 
-    hand = constructForYaku(target)
+    { hand, pool } = constructForYaku(target)
 
-    wall = buildWall(hand)
+    wall = buildWall(pool, hand)
     seatWind = sample(SUITS.w)
     prevalentWind = sample([SUITS.w[0], SUITS.w[1]])
 

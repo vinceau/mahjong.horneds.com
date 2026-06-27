@@ -30,7 +30,7 @@ test 'generates valid game state shape', ->
 
 test 'constructForYaku produces valid hand for every yaku', ->
     for yakuName in ALL_YAKU
-        hand = constructForYaku(yakuName)
+        { hand } = constructForYaku(yakuName)
         unless hand
             console.log "FAIL: constructForYaku('#{yakuName}') returned null"
         expect(hand).toBeTruthy()
@@ -44,7 +44,7 @@ test 'constructForYaku produces valid hand for every yaku', ->
 
 test 'each constructed hand is detected as its target yaku', ->
     for yakuName in ALL_YAKU
-        hand = constructForYaku(yakuName)
+        { hand } = constructForYaku(yakuName)
         wall = []
         result = analyze { wall, hand, seatWind: 'wE', prevalentWind: 'wS' }
         detected = (y.name for y in result.yaku)
