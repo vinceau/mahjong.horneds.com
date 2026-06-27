@@ -448,12 +448,6 @@ constructForYaku = (target) ->
             melds = ["#{honor}#{honor}#{honor}"]
             buildHandWithMelds melds
 
-        when 'tsumo'
-            buildHandSimple null, {}
-
-        when 'riichi'
-            buildHandSimple null, {}
-
         when 'chuuren pooto'
             suit = sample ['m', 's', 'p']
             set1 = TileSet.create("#{suit}1#{suit}1#{suit}1")
