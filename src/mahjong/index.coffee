@@ -1,7 +1,7 @@
 analyze = require './analyze'
 
 scores = require './analyze/scores'
-{ generateGameState } = require './generator'
+{ generateGameState } = require './yaku_generator'
 
 
 module.exports = ->
