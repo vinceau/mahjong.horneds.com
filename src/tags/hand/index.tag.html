@@ -5,7 +5,18 @@
                 <span class="u-bold"> HAND #{ opts.number } </span>
             </div>
             <div class="u-flex u-flex--wrap">
-                <tile each={ tile in opts.hand.tiles() } if={ tile.id != opts.hand.wait.id } tile={ tile } />
+                <div each={ set in opts.hand.sets } class="u-flex meld" style="position: relative">
+                    <tile each={ tile, idx in set.tiles }
+                          tile={ tile }
+                          open={ set.isOpened && (idx + 1 === set.tiles.length) && rootTag.isWaitMissing(set) }
+                          back={ set.isKan && !set.isOpened && (idx == 0 || idx == set.tiles.length - 1) }
+                          if={ rootTag.isNotWaitTile(tile) } />
+                </div>
+                <div class="u-flex pair">
+                    <tile each={ tile in opts.hand.pair.tiles }
+                          tile={ tile }
+                          if={ rootTag.isNotWaitTile(tile) } />
+                </div>
             </div>
         </div>
         <div>
@@ -16,7 +27,25 @@
         </div>
     </div>
 
+    <style>
+        .meld + .meld { margin-left: .5rem; }
+        .pair { margin-left: 1rem; }
+    </style>
+
     <script type="text/coffeescript">
         require 'tags/tile'
+
+        # Create an explicit reference to the root <hand> tag context
+        # Riot makes variables defined on 'this' accessible to templates
+        @rootTag = this
+
+        @isWaitMissing = (set) =>
+            waitId = @opts.hand?.wait?.id
+            return true if !waitId
+            return !set.tiles.some (t) -> t.id == waitId
+
+        @isNotWaitTile = (tile) =>
+            waitId = @opts.hand?.wait?.id
+            return tile.id != waitId
     </script>
 </hand>

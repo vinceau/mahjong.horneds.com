@@ -1,12 +1,12 @@
 <tile>
     <div
         class="c-tile {'c-tile--open': opts.open}"
-        aria-label={ !opts.tile.isClosed && opts.label }
-        title={ !opts.tile.isClosed && opts.label }
+        aria-label={ !opts.tile.isClosed && !opts.back && opts.label }
+        title={ !opts.tile.isClosed && !opts.back && opts.label }
         role="tooltip"
         data-microtip-position="top"
     >
-        <img class="c-tile__img {'c-tile__img--back': opts.tile.isClosed}" src={ opts.tile.isClosed && tiles.back || tiles.white[opts.tile.tile] } />
+        <img class="c-tile__img {'c-tile__img--back': opts.tile.isClosed || opts.back}" src={ (opts.tile.isClosed || opts.back) && tiles.back || tiles.white[opts.tile.tile] } />
     </div>
     <script type="text/coffeescript">
         require './styles.sass'
