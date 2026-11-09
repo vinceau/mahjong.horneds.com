@@ -3,9 +3,6 @@ Riichi Mahjong Scores Trainer
 
 Based on the source files for https://mahjong.horneds.com
 
-New changes reployed to: http://vince.id.au/mahjong.horneds.com/
-
-
 ## Changes (compared to the original)
 
 * Improved support for mobile
