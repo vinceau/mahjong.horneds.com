@@ -1,6 +1,6 @@
 import analyze from './analyze'
 import scores from './analyze/scores'
-import { generateGameState } from './generator'
+import { generateGameState } from './yaku_generator'
 
 export default () => {
     while (true) {

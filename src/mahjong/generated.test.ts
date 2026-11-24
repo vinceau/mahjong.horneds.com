@@ -1,5 +1,6 @@
 import generate from './index'
 import { Tile } from './tiles'
+import { NORMAL_YAKU, YAKUMAN } from './yaku_generator'
 
 const GAMES = 3000
 
@@ -18,10 +19,12 @@ const countDoras = (tiles: Tile[], indicators: Tile[]): number => {
 
 test('generated hands are scored consistently', () => {
     let opened = 0
+    const seen: Record<string, boolean> = {}
 
     for (let i = 0; i < GAMES; i++) {
         const game = generate()
         const { hand } = game
+        for (const item of game.yaku) seen[item.name] = true
 
         // The winning tile must point at the set it belongs to, otherwise
         // yaku/fu that depend on the wait (pinfu, sanankou, tanki fu) go wrong.
@@ -43,4 +46,7 @@ test('generated hands are scored consistently', () => {
     }
 
     expect(opened).toBeGreaterThan(0)
+
+    // the generator aims at a yaku every hand, so the whole list shows up
+    for (const yaku of [...NORMAL_YAKU, ...YAKUMAN]) expect(seen[yaku]).toBeTruthy()
 })

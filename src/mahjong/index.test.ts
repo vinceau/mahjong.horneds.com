@@ -1,12 +1,12 @@
-jest.mock('./generator', () => {
-    const actual = jest.requireActual('./generator')
+jest.mock('./yaku_generator', () => {
+    const actual = jest.requireActual('./yaku_generator')
     return {
         __esModule: true,
         generateGameState: jest.fn(actual.generateGameState),
     }
 })
 
-const { generateGameState } = require('./generator') as { generateGameState: jest.Mock }
+const { generateGameState } = require('./yaku_generator') as { generateGameState: jest.Mock }
 const generate = require('./index').default
 
 const { Hand, Tile } = require('./tiles') as typeof import('./tiles')
