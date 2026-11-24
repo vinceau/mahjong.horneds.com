@@ -1,6 +1,6 @@
 import * as riot from 'riot'
 
-import { Hand } from 'mahjong/tiles'
+import { Hand, TileSet } from 'mahjong/tiles'
 import { desc } from 'utils/tiles'
 
 import './index'
@@ -13,6 +13,23 @@ const mountHand = (mask: string | Hand): any => {
     const hand = typeof mask === 'string' ? Hand.create(mask) : mask
     return riot.mount(element, 'hand', { hand, number: 1 })[0]
 }
+
+const kanHand = (opened: boolean): Hand => {
+    const hand = new Hand(
+        TileSet.create('m5m5m5m5'),
+        TileSet.create('p1p2p3'),
+        TileSet.create('s1s2s3'),
+        TileSet.create('m7m8m9'),
+        TileSet.create('wEwE'),
+    )
+    hand.sets[0].isOpened = opened
+    hand.isOpened = opened
+    hand.wait = hand.pair!.tiles[0]
+    return hand
+}
+
+const renderedTiles = (root: Element): Element[] =>
+    [...root.children].filter((item) => item.tagName === 'TILE')
 
 
 test('labels every tile with its name', () => {
@@ -71,6 +88,44 @@ test('keeps a closed hand straight', () => {
     const tag = mountHand(hand)
 
     expect(tag.root.querySelectorAll('.c-tile--open')).toHaveLength(0)
+
+    tag.unmount()
+})
+
+
+test('shows a closed kan as back-face-face-back', () => {
+    const hand = kanHand(false)
+    const tag = mountHand(hand)
+
+    const concealed = tag.root.querySelector('.u-flex--wrap')!
+    const tiles = hand.tiles().filter((tile) => tile.id !== hand.wait!.id)
+    const rendered = renderedTiles(concealed)
+
+    expect(rendered).toHaveLength(tiles.length)
+
+    const kan = tiles
+        .map((tile, idx) => ({ tile, idx }))
+        .filter((item) => item.tile.tile === 'm5')
+    const backs = kan.map((item) =>
+        rendered[item.idx].querySelector('.c-tile__img')!.classList.contains('c-tile__img--back'))
+
+    expect(backs).toEqual([true, false, false, true])
+
+    tag.unmount()
+})
+
+
+test('turns the called tile of an open kan sideways', () => {
+    const hand = kanHand(true)
+    const tag = mountHand(hand)
+
+    const called = tag.root.querySelector('.mj-hand__called')!
+    const tiles = [...called.querySelectorAll('.c-tile')]
+    const sideways = tiles.map((tile) => tile.classList.contains('c-tile--open'))
+
+    expect(tiles).toHaveLength(4)
+    expect(sideways).toEqual([false, false, false, true])
+    expect(called.querySelectorAll('.c-tile__img--back')).toHaveLength(0)
 
     tag.unmount()
 })
