@@ -3,7 +3,7 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches:
-      - master
+      - main
   workflow_dispatch:
 
 permissions:
@@ -46,9 +46,6 @@ jobs:
 
       - name: Disable Jekyll
         run: touch build/.nojekyll
-
-      - name: Set custom domain
-        run: echo "mahjong.horneds.com" > build/CNAME
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
