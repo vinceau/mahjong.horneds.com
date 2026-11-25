@@ -31,6 +31,17 @@ const kanHand = (opened: boolean): Hand => {
 const renderedTiles = (root: Element): Element[] =>
     [...root.children].filter((item) => item.tagName === 'TILE')
 
+const meldBlocks = (root: Element): Element[] =>
+    [...root.querySelectorAll('.mj-hand__called')]
+
+const tileBacks = (block: Element): boolean[] =>
+    [...block.querySelectorAll('.c-tile__img')]
+        .map((img) => img.classList.contains('c-tile__img--back'))
+
+const sidewaysTiles = (block: Element): boolean[] =>
+    [...block.querySelectorAll('.c-tile')]
+        .map((tile) => tile.classList.contains('c-tile--open'))
+
 
 test('labels every tile with its name', () => {
     const tag = mountHand('m1m2m3 p1p2p3 s1s2s3 m7m8m9 wSwS')
@@ -93,39 +104,61 @@ test('keeps a closed hand straight', () => {
 })
 
 
-test('shows a closed kan as back-face-face-back', () => {
-    const hand = kanHand(false)
-    const tag = mountHand(hand)
+test('lays a closed kan out on the right as back-face-face-back', () => {
+    const tag = mountHand(kanHand(false))
 
+    // the kan is not part of the concealed hand (10 tiles: the kan draws an extra)
     const concealed = tag.root.querySelector('.u-flex--wrap')!
-    const tiles = hand.tiles().filter((tile) => tile.id !== hand.wait!.id)
-    const rendered = renderedTiles(concealed)
+    expect(renderedTiles(concealed)).toHaveLength(10)
+    expect(concealed.lastElementChild!.className).toContain('mj-hand__called')
 
-    expect(rendered).toHaveLength(tiles.length)
-
-    const kan = tiles
-        .map((tile, idx) => ({ tile, idx }))
-        .filter((item) => item.tile.tile === 'm5')
-    const backs = kan.map((item) =>
-        rendered[item.idx].querySelector('.c-tile__img')!.classList.contains('c-tile__img--back'))
-
-    expect(backs).toEqual([true, false, false, true])
+    const [kan] = meldBlocks(tag.root)
+    expect(kan.querySelectorAll('.c-tile')).toHaveLength(4)
+    expect(tileBacks(kan)).toEqual([true, false, false, true])
+    // a closed kan is never turned sideways
+    expect(sidewaysTiles(kan)).toEqual([false, false, false, false])
 
     tag.unmount()
 })
 
 
-test('turns the called tile of an open kan sideways', () => {
-    const hand = kanHand(true)
+test('lays an open kan out on the right with a sideways called tile', () => {
+    const tag = mountHand(kanHand(true))
+
+    const concealed = tag.root.querySelector('.u-flex--wrap')!
+    expect(renderedTiles(concealed)).toHaveLength(10)
+
+    const [kan] = meldBlocks(tag.root)
+    expect(kan.querySelectorAll('.c-tile')).toHaveLength(4)
+    expect(sidewaysTiles(kan)).toEqual([false, false, false, true])
+    expect(tileBacks(kan)).toEqual([false, false, false, false])
+
+    tag.unmount()
+})
+
+
+test('keeps a called set and a closed kan together at the right, in hand order', () => {
+    const hand = new Hand(
+        TileSet.create('m5m5m5m5'),
+        TileSet.create('p1p2p3'),
+        TileSet.create('s1s2s3'),
+        TileSet.create('m7m8m9'),
+        TileSet.create('wEwE'),
+    )
+    hand.sets[1].isOpened = true
+    hand.isOpened = true
+    hand.wait = hand.pair!.tiles[0]
+
     const tag = mountHand(hand)
 
-    const called = tag.root.querySelector('.mj-hand__called')!
-    const tiles = [...called.querySelectorAll('.c-tile')]
-    const sideways = tiles.map((tile) => tile.classList.contains('c-tile--open'))
+    const concealed = tag.root.querySelector('.u-flex--wrap')!
+    expect(renderedTiles(concealed)).toHaveLength(7)
 
-    expect(tiles).toHaveLength(4)
-    expect(sideways).toEqual([false, false, false, true])
-    expect(called.querySelectorAll('.c-tile__img--back')).toHaveLength(0)
+    const [kan, called] = meldBlocks(tag.root)
+    expect(tileBacks(kan)).toEqual([true, false, false, true])
+    expect(sidewaysTiles(kan)).toEqual([false, false, false, false])
+    expect(tileBacks(called)).toEqual([false, false, false])
+    expect(sidewaysTiles(called)).toEqual([false, false, true])
 
     tag.unmount()
 })

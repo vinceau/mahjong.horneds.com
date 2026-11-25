@@ -6,9 +6,9 @@
             </div>
             <div class="u-gray-l u-mb1 u-size-s">1. Review the winning hand</div>
             <div class="u-flex u-flex--wrap">
-                <tile each={ tile in concealed() } if={ tile.id != opts.hand.wait.id } back={ isKanBack(tile) } tile={ tile } label={ descTiles[tile.tile] } />
+                <tile each={ tile in concealed() } if={ tile.id != opts.hand.wait.id } tile={ tile } label={ descTiles[tile.tile] } />
                 <div each={ set in called() } class="u-flex mj-hand__called">
-                    <tile each={ tile in set.tiles } open={ tile.id === set.tiles[set.tiles.length - 1].id } tile={ tile } label={ descTiles[tile.tile] } />
+                    <tile each={ tile in set.tiles } open={ set.isOpened && tile.id === set.tiles[set.tiles.length - 1].id } back={ isKanBack(tile) } tile={ tile } label={ descTiles[tile.tile] } />
                 </div>
             </div>
         </div>
@@ -26,9 +26,10 @@
 
         this.descTiles = require('utils/tiles').desc
 
-        // called sets are shown apart, the winning tile is drawn separately
-        this.concealed = () => opts.hand.tiles().filter((tile) => !tile.set.isOpened)
-        this.called = () => opts.hand.sets.filter((set) => set.isOpened)
+        // the concealed sets and the pair stay in the hand; called sets and kans
+        // are laid out on the right, the winning tile is drawn separately
+        this.concealed = () => opts.hand.tiles().filter((tile) => !tile.set.isOpened && !tile.set.isKan)
+        this.called = () => opts.hand.sets.filter((set) => set.isOpened || set.isKan)
 
         // a closed kan shows its two outer tiles face down: BFFB
         this.isKanBack = (tile) => {
